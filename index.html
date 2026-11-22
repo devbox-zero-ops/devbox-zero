@@ -236,6 +236,8 @@
       <button class="nav-btn" data-tool="base64">Base64 &amp; URL <span>⇄</span></button>
       <button class="nav-btn" data-tool="cron">Cron Parser <span>⏱</span></button>
       <button class="nav-btn" data-tool="diff">Text Diff <span>±</span></button>
+      <button class="nav-btn" data-tool="regex">Regex Tester <span>/.*/</span></button>
+      <button class="nav-btn" data-tool="hash">SHA-256 Hash <span>🔐</span></button>
       <button class="nav-btn" data-tool="uuid">UUID &amp; Secrets <span>#</span></button>
 
       <div class="sponsor-box">
@@ -334,6 +336,39 @@
           <textarea id="diff-b" style="min-height:200px" placeholder="Modified text..."></textarea>
         </div>
         <div class="card diff-out" id="diff-out">Click Compare to see line differences.</div>
+      </section>
+
+      <!-- Regex Tester -->
+      <section class="tool-section" id="tool-regex">
+        <div class="tool-head">
+          <h1>Regex Live Tester &amp; Match Extractor</h1>
+          <p>Test JavaScript regular expressions with flags and inspect every matched group locally.</p>
+        </div>
+        <div class="toolbar">
+          <input type="text" id="rx-pat" value="([a-z0-9._%+-]+)@([a-z0-9.-]+\.[a-z]{2,})" style="flex:1;min-width:220px" placeholder="Pattern..." oninput="runRegex()" />
+          <input type="text" id="rx-flags" value="gi" style="width:70px" placeholder="flags" oninput="runRegex()" />
+          <span class="status" id="rx-status">Ready</span>
+        </div>
+        <div class="grid-2">
+          <textarea id="rx-text" oninput="runRegex()" placeholder="Test text...">Contact alice@example.com or ops@devbox.io for details.</textarea>
+          <textarea id="rx-out" readonly placeholder="Matches..."></textarea>
+        </div>
+      </section>
+
+      <!-- SHA-256 / SHA-512 Hash -->
+      <section class="tool-section" id="tool-hash">
+        <div class="tool-head">
+          <h1>SHA-256 &amp; SHA-512 Cryptographic Hasher</h1>
+          <p>Compute Web Crypto API digests locally without transmitting sensitive text.</p>
+        </div>
+        <div class="toolbar">
+          <button class="btn btn-primary" onclick="runHash()">Compute Digests</button>
+          <button class="btn" onclick="copyEl('hash-out')">Copy Output</button>
+        </div>
+        <div class="grid-2">
+          <textarea id="hash-in" placeholder="Enter text to hash..." oninput="runHash()">hello devbox zero</textarea>
+          <textarea id="hash-out" readonly placeholder="SHA-256 / SHA-512 output..."></textarea>
+        </div>
       </section>
 
       <!-- UUID & Secrets -->
@@ -499,7 +534,34 @@
       });
       document.getElementById('uuid-out').value = list.join('\n');
     }
-    genUuids();
+    function runRegex() {
+      try {
+        const pat = document.getElementById('rx-pat').value;
+        const flags = document.getElementById('rx-flags').value;
+        const text = document.getElementById('rx-text').value;
+        const re = new RegExp(pat, flags.includes('g') ? flags : flags + 'g');
+        const matches = [...text.matchAll(re)];
+        document.getElementById('rx-out').value = matches.length
+          ? matches.map((m, i) => `#${i + 1} [idx ${m.index}]: ${m[0]}${m.length > 1 ? ' | groups: ' + JSON.stringify(m.slice(1)) : ''}`).join('\n')
+          : 'No matches.';
+        setStatus('rx-status', `${matches.length} match(es)`, 'ok');
+      } catch (e) {
+        setStatus('rx-status', 'Error: ' + e.message, 'err');
+      }
+    }
+
+    async function runHash() {
+      const txt = document.getElementById('hash-in').value;
+      const enc = new TextEncoder().encode(txt);
+      const toHex = buf => Array.from(new Uint8Array(buf), b => b.toString(16).padStart(2, '0')).join('');
+      const [h256, h512] = await Promise.all([
+        crypto.subtle.digest('SHA-256', enc),
+        crypto.subtle.digest('SHA-512', enc)
+      ]);
+      document.getElementById('hash-out').value = `SHA-256:\n${toHex(h256)}\n\nSHA-512:\n${toHex(h512)}`;
+    }
+
+    genUuids(); runRegex(); runHash();
   </script>
 </body>
 </html>
