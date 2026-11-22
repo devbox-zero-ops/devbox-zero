@@ -209,6 +209,40 @@
       flex-wrap: wrap;
       gap: 10px;
     }
+    dialog#support-modal {
+      background: var(--panel);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 22px;
+      max-width: 680px;
+      width: calc(100% - 32px);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.65);
+    }
+    dialog#support-modal::backdrop {
+      background: rgba(5, 8, 15, 0.72);
+      backdrop-filter: blur(4px);
+    }
+    .qr-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin: 14px 0;
+    }
+    .qr-card {
+      background: rgba(0,0,0,0.28);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+    }
+    .qr-card img {
+      width: 100%;
+      max-width: 220px;
+      border-radius: 8px;
+      display: block;
+      margin: 8px auto 0;
+    }
     @media (max-width: 860px) {
       .layout { grid-template-columns: 1fr; }
       aside { border-right: none; border-bottom: 1px solid var(--border); flex-direction: row; overflow-x: auto; }
@@ -392,6 +426,33 @@
     <span>Privacy Guarantee: Zero telemetry, zero cookies, zero network requests.</span>
   </footer>
 
+  <dialog id="support-modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <strong style="font-size:18px">💎 Support DevBox Zero / 赞赏支持</strong>
+      <button class="btn" onclick="document.getElementById('support-modal').close()">Close</button>
+    </div>
+    <p style="margin:0 0 12px;color:var(--muted);font-size:13.5px">
+      DevBox Zero is 100% free, ad-free, and runs locally in your browser. Support ongoing tools via WeChat Pay, Alipay, or zero-fee USDC:
+    </p>
+    <div class="qr-grid">
+      <div class="qr-card">
+        <strong>WeChat Pay / 微信赞赏</strong>
+        <img src="./assets/wechat-pay.jpg" alt="WeChat Pay QR Code" loading="lazy" />
+      </div>
+      <div class="qr-card">
+        <strong>Alipay / 支付宝赞赏</strong>
+        <img src="./assets/alipay.jpg" alt="Alipay QR Code" loading="lazy" />
+      </div>
+    </div>
+    <div style="font-size:12.5px;color:var(--muted);margin-top:8px">Crypto USDC (Click to copy):</div>
+    <div class="addr" onclick="copyText('0xe4c8739bCC488bD98978CE976511735e0499d432', this)">
+      Base / EVM USDC: 0xe4c8739bCC488bD98978CE976511735e0499d432
+    </div>
+    <div class="addr" onclick="copyText('89XqpaJDKajhYFs4Vmex853yxoEU7HqwnMAPtTDpgZgG', this)">
+      Solana USDC / SOL: 89XqpaJDKajhYFs4Vmex853yxoEU7HqwnMAPtTDpgZgG
+    </div>
+  </dialog>
+
   <script>
     document.querySelectorAll('.nav-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -421,7 +482,7 @@
     }
 
     function openSupport() {
-      alert('Support DevBox Zero with USDC (Zero fees, instant):\n\nBase / EVM USDC:\n0xe4c8739bCC488bD98978CE976511735e0499d432\n\nSolana USDC:\n89XqpaJDKajhYFs4Vmex853yxoEU7HqwnMAPtTDpgZgG');
+      document.getElementById('support-modal').showModal();
     }
 
     function formatJson(spaces) {
