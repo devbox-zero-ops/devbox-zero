@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DevBox Zero — 100% Local Privacy Developer Toolkit (JSON, JWT, Base64, Cron, Diff)</title>
+  <meta name="description" content="Free, instant, 100% browser-local developer toolkit. Format JSON & generate TypeScript interfaces, decode JWTs, parse Cron expressions, encode Base64/URL, compare text diffs, and generate secure UUIDs without sending a single byte to any server." />
+  <meta name="keywords" content="json formatter, json to typescript, jwt decoder, base64 encoder, cron expression parser, text diff online, uuid generator, local privacy developer tools" />
+  <meta property="og:title" content="DevBox Zero — Local-First Privacy Developer Toolkit" />
+  <meta property="og:description" content="Zero tracking, zero server uploads. Instant JSON, JWT, Base64, Cron, Diff & UUID tools right in your browser." />
+  <meta property="og:type" content="website" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "DevBox Zero",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Any",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "description": "100% client-side privacy-first developer toolkit for JSON, JWT, Base64, Cron, Diff, and UUID generation."
+  }
+  </script>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --panel: #111827;
+      --panel-2: #1f2937;
+      --border: #263244;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #38bdf8;
+      --accent-2: #818cf8;
+      --ok: #34d399;
+      --err: #f87171;
+      --radius: 12px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --sans: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      background: radial-gradient(circle at top right, rgba(56,189,248,0.08), transparent 40%), var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      background: rgba(11,15,25,0.85);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: -0.02em;
+    }
+    .badge {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(52, 211, 153, 0.14);
+      color: var(--ok);
+      border: 1px solid rgba(52, 211, 153, 0.3);
+      font-weight: 600;
+    }
+    .header-actions { display: flex; gap: 10px; align-items: center; }
+    .btn {
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .btn:hover { border-color: var(--accent); color: #fff; }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #06101d;
+      border: none;
+    }
+    .btn-primary:hover { opacity: 0.92; color: #06101d; }
+    .layout {
+      display: grid;
+      grid-template-columns: 230px 1fr;
+      flex: 1;
+      max-width: 1440px;
+      width: 100%;
+      margin: 0 auto;
+    }
+    aside {
+      border-right: 1px solid var(--border);
+      padding: 18px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .nav-btn {
+      text-align: left;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--muted);
+      padding: 10px 12px;
+      border-radius: 9px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-btn:hover { background: rgba(255,255,255,0.03); color: var(--text); }
+    .nav-btn.active {
+      background: rgba(56,189,248,0.12);
+      border-color: rgba(56,189,248,0.35);
+      color: #fff;
+      font-weight: 600;
+    }
+    main {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .tool-section { display: none; flex-direction: column; gap: 14px; }
+    .tool-section.active { display: flex; }
+    .tool-head h1 { margin: 0 0 4px; font-size: 22px; }
+    .tool-head p { margin: 0; color: var(--muted); font-size: 14px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    textarea, input[type="text"] {
+      width: 100%;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 13px;
+      padding: 12px 14px;
+      resize: vertical;
+      outline: none;
+    }
+    textarea:focus, input[type="text"]:focus { border-color: var(--accent); }
+    textarea { min-height: 300px; line-height: 1.5; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .status { font-size: 13px; color: var(--muted); margin-left: auto; }
+    .status.ok { color: var(--ok); }
+    .status.err { color: var(--err); }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+    .diff-out {
+      font-family: var(--mono);
+      font-size: 13px;
+      white-space: pre-wrap;
+      line-height: 1.55;
+      max-height: 360px;
+      overflow: auto;
+    }
+    .diff-add { background: rgba(52,211,153,0.16); color: #6ee7b7; display: block; padding: 1px 6px; }
+    .diff-del { background: rgba(248,113,113,0.16); color: #fca5a5; display: block; padding: 1px 6px; }
+    .diff-eq { color: var(--muted); display: block; padding: 1px 6px; }
+    .sponsor-box {
+      margin-top: auto;
+      background: linear-gradient(180deg, rgba(56,189,248,0.08), rgba(129,140,248,0.06));
+      border: 1px solid rgba(56,189,248,0.28);
+      border-radius: var(--radius);
+      padding: 14px;
+      font-size: 12.5px;
+      line-height: 1.5;
+    }
+    .sponsor-box strong { color: #fff; display: block; margin-bottom: 6px; }
+    .addr {
+      font-family: var(--mono);
+      font-size: 11px;
+      background: rgba(0,0,0,0.35);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 8px;
+      word-break: break-all;
+      margin: 6px 0;
+      cursor: pointer;
+    }
+    .addr:hover { border-color: var(--accent); }
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 14px 24px;
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    @media (max-width: 860px) {
+      .layout { grid-template-columns: 1fr; }
+      aside { border-right: none; border-bottom: 1px solid var(--border); flex-direction: row; overflow-x: auto; }
+      .grid-2 { grid-template-columns: 1fr; }
+      .sponsor-box { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span>⚡ DevBox Zero</span>
+      <span class="badge">100% Local · Zero Server Uploads</span>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" onclick="openSupport()">💎 Support / Pro Pack (USDC)</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside>
+      <button class="nav-btn active" data-tool="json">JSON &amp; TS Types <span>{}</span></button>
+      <button class="nav-btn" data-tool="jwt">JWT Decoder <span>🔑</span></button>
+      <button class="nav-btn" data-tool="base64">Base64 &amp; URL <span>⇄</span></button>
+      <button class="nav-btn" data-tool="cron">Cron Parser <span>⏱</span></button>
+      <button class="nav-btn" data-tool="diff">Text Diff <span>±</span></button>
+      <button class="nav-btn" data-tool="uuid">UUID &amp; Secrets <span>#</span></button>
+
+      <div class="sponsor-box">
+        <strong>Keep DevBox Zero Ad-Free</strong>
+        Every tool runs locally in your browser. Tip in USDC (Base / Solana) to support new tools:
+        <div class="addr" title="Click to copy Base/EVM USDC address" onclick="copyText('0xe4c8739bCC488bD98978CE976511735e0499d432', this)">
+          Base / EVM: 0xe4c8739bCC488bD98978CE976511735e0499d432
+        </div>
+        <div class="addr" title="Click to copy Solana USDC address" onclick="copyText('89XqpaJDKajhYFs4Vmex853yxoEU7HqwnMAPtTDpgZgG', this)">
+          Solana: 89XqpaJDKajhYFs4Vmex853yxoEU7HqwnMAPtTDpgZgG
+        </div>
+      </div>
+    </aside>
+
+    <main>
+      <!-- JSON Tool -->
+      <section class="tool-section active" id="tool-json">
+        <div class="tool-head">
+          <h1>JSON Formatter, Minifier &amp; TypeScript Generator</h1>
+          <p>Validate, prettify, minify JSON or convert payloads directly into TypeScript interfaces locally.</p>
+        </div>
+        <div class="toolbar">
+          <button class="btn btn-primary" onclick="formatJson(2)">Format (2 spaces)</button>
+          <button class="btn" onclick="formatJson(0)">Minify</button>
+          <button class="btn" onclick="jsonToTs()">Generate TS Interface</button>
+          <button class="btn" onclick="copyEl('json-out')">Copy Output</button>
+          <span class="status" id="json-status">Ready</span>
+        </div>
+        <div class="grid-2">
+          <textarea id="json-in" placeholder='{"id": 101, "name": "DevBox", "tags": ["local", "fast"], "active": true}'></textarea>
+          <textarea id="json-out" readonly placeholder="Output appears here..."></textarea>
+        </div>
+      </section>
+
+      <!-- JWT Tool -->
+      <section class="tool-section" id="tool-jwt">
+        <div class="tool-head">
+          <h1>JWT Token Decoder (Offline)</h1>
+          <p>Inspect JWT header, payload, and expiration timestamp safely without pasting tokens into third-party servers.</p>
+        </div>
+        <div class="toolbar">
+          <button class="btn btn-primary" onclick="decodeJwt()">Decode JWT</button>
+          <span class="status" id="jwt-status">Paste a JWT below</span>
+        </div>
+        <textarea id="jwt-in" style="min-height:110px" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."></textarea>
+        <div class="grid-2">
+          <textarea id="jwt-header" readonly placeholder="Header JSON"></textarea>
+          <textarea id="jwt-payload" readonly placeholder="Payload JSON"></textarea>
+        </div>
+      </section>
+
+      <!-- Base64 & URL -->
+      <section class="tool-section" id="tool-base64">
+        <div class="tool-head">
+          <h1>Base64 &amp; URL Encoder / Decoder</h1>
+          <p>UTF-8 safe Base64 and URI component encoding/decoding.</p>
+        </div>
+        <div class="toolbar">
+          <button class="btn btn-primary" onclick="b64Encode()">Base64 Encode</button>
+          <button class="btn" onclick="b64Decode()">Base64 Decode</button>
+          <button class="btn" onclick="urlEnc()">URL Encode</button>
+          <button class="btn" onclick="urlDec()">URL Decode</button>
+          <button class="btn" onclick="copyEl('b64-out')">Copy Output</button>
+          <span class="status" id="b64-status">Ready</span>
+        </div>
+        <div class="grid-2">
+          <textarea id="b64-in" placeholder="Input text..."></textarea>
+          <textarea id="b64-out" readonly placeholder="Result..."></textarea>
+        </div>
+      </section>
+
+      <!-- Cron Parser -->
+      <section class="tool-section" id="tool-cron">
+        <div class="tool-head">
+          <h1>5-Field Cron Expression Explainer</h1>
+          <p>Verify standard cron schedules (minute hour day-of-month month day-of-week).</p>
+        </div>
+        <div class="toolbar">
+          <input type="text" id="cron-in" value="0 */6 * * *" style="max-width:300px" />
+          <button class="btn btn-primary" onclick="explainCron()">Explain</button>
+        </div>
+        <div class="card" id="cron-out" style="font-family:var(--mono);font-size:14px;line-height:1.7"></div>
+      </section>
+
+      <!-- Text Diff -->
+      <section class="tool-section" id="tool-diff">
+        <div class="tool-head">
+          <h1>Line-by-Line Text Diff</h1>
+          <p>Compare two configs, JSON files, or code snippets locally.</p>
+        </div>
+        <div class="toolbar">
+          <button class="btn btn-primary" onclick="runDiff()">Compare</button>
+        </div>
+        <div class="grid-2">
+          <textarea id="diff-a" style="min-height:200px" placeholder="Original text..."></textarea>
+          <textarea id="diff-b" style="min-height:200px" placeholder="Modified text..."></textarea>
+        </div>
+        <div class="card diff-out" id="diff-out">Click Compare to see line differences.</div>
+      </section>
+
+      <!-- UUID & Secrets -->
+      <section class="tool-section" id="tool-uuid">
+        <div class="tool-head">
+          <h1>Cryptographic UUID v4 &amp; Random Secret Generator</h1>
+          <p>Uses Web Crypto API (`crypto.getRandomValues` / `crypto.randomUUID`).</p>
+        </div>
+        <div class="toolbar">
+          <button class="btn btn-primary" onclick="genUuids()">Generate 10 UUID v4</button>
+          <button class="btn" onclick="genSecrets()">Generate 256-bit Hex Keys</button>
+          <button class="btn" onclick="copyEl('uuid-out')">Copy All</button>
+        </div>
+        <textarea id="uuid-out" readonly></textarea>
+      </section>
+    </main>
+  </div>
+
+  <footer>
+    <span>DevBox Zero · 100% Client-Side Open Developer Utilities</span>
+    <span>Privacy Guarantee: Zero telemetry, zero cookies, zero network requests.</span>
+  </footer>
+
+  <script>
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tool-section').forEach(s => s.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tool-' + btn.dataset.tool).classList.add('active');
+      });
+    });
+
+    function setStatus(id, msg, cls) {
+      const el = document.getElementById(id);
+      el.textContent = msg;
+      el.className = 'status ' + (cls || '');
+    }
+
+    function copyEl(id) {
+      const val = document.getElementById(id).value;
+      if (val) navigator.clipboard.writeText(val);
+    }
+
+    function copyText(text, el) {
+      navigator.clipboard.writeText(text);
+      const orig = el.textContent;
+      el.textContent = 'Copied: ' + text;
+      setTimeout(() => { el.textContent = orig; }, 1400);
+    }
+
+    function openSupport() {
+      alert('Support DevBox Zero with USDC (Zero fees, instant):\n\nBase / EVM USDC:\n0xe4c8739bCC488bD98978CE976511735e0499d432\n\nSolana USDC:\n89XqpaJDKajhYFs4Vmex853yxoEU7HqwnMAPtTDpgZgG');
+    }
+
+    function formatJson(spaces) {
+      try {
+        const parsed = JSON.parse(document.getElementById('json-in').value);
+        document.getElementById('json-out').value = JSON.stringify(parsed, null, spaces);
+        setStatus('json-status', 'Valid JSON', 'ok');
+      } catch (e) {
+        setStatus('json-status', 'Error: ' + e.message, 'err');
+      }
+    }
+
+    function jsonToTs() {
+      try {
+        const parsed = JSON.parse(document.getElementById('json-in').value);
+        function infer(v, indent = '  ') {
+          if (v === null) return 'null';
+          if (Array.isArray(v)) return (v.length ? infer(v[0], indent) : 'unknown') + '[]';
+          if (typeof v === 'object') {
+            const lines = Object.entries(v).map(([k, val]) => `${indent}${/^[a-zA-Z_$][\w$]*$/.test(k) ? k : JSON.stringify(k)}: ${infer(val, indent + '  ')};`);
+            return `{\n${lines.join('\n')}\n${indent.slice(2)}}`;
+          }
+          return typeof v;
+        }
+        document.getElementById('json-out').value = `export interface RootObject ${infer(parsed)}`;
+        setStatus('json-status', 'TypeScript interface generated', 'ok');
+      } catch (e) {
+        setStatus('json-status', 'Error: ' + e.message, 'err');
+      }
+    }
+
+    function decodeJwt() {
+      try {
+        const parts = document.getElementById('jwt-in').value.trim().split('.');
+        if (parts.length < 2) throw new Error('Invalid JWT format');
+        const dec = s => JSON.parse(decodeURIComponent(escape(atob(s.replace(/-/g, '+').replace(/_/g, '/')))));
+        const header = dec(parts[0]);
+        const payload = dec(parts[1]);
+        document.getElementById('jwt-header').value = JSON.stringify(header, null, 2);
+        document.getElementById('jwt-payload').value = JSON.stringify(payload, null, 2);
+        const exp = payload.exp ? new Date(payload.exp * 1000).toISOString() : 'No exp claim';
+        setStatus('jwt-status', 'Decoded · Exp: ' + exp, 'ok');
+      } catch (e) {
+        setStatus('jwt-status', 'Error: ' + e.message, 'err');
+      }
+    }
+
+    function b64Encode() {
+      try {
+        const v = document.getElementById('b64-in').value;
+        document.getElementById('b64-out').value = btoa(unescape(encodeURIComponent(v)));
+        setStatus('b64-status', 'Encoded to Base64', 'ok');
+      } catch (e) { setStatus('b64-status', e.message, 'err'); }
+    }
+    function b64Decode() {
+      try {
+        const v = document.getElementById('b64-in').value.trim();
+        document.getElementById('b64-out').value = decodeURIComponent(escape(atob(v)));
+        setStatus('b64-status', 'Decoded from Base64', 'ok');
+      } catch (e) { setStatus('b64-status', e.message, 'err'); }
+    }
+    function urlEnc() {
+      document.getElementById('b64-out').value = encodeURIComponent(document.getElementById('b64-in').value);
+      setStatus('b64-status', 'URL Encoded', 'ok');
+    }
+    function urlDec() {
+      try {
+        document.getElementById('b64-out').value = decodeURIComponent(document.getElementById('b64-in').value);
+        setStatus('b64-status', 'URL Decoded', 'ok');
+      } catch (e) { setStatus('b64-status', e.message, 'err'); }
+    }
+
+    function explainCron() {
+      const parts = document.getElementById('cron-in').value.trim().split(/\s+/);
+      const out = document.getElementById('cron-out');
+      if (parts.length !== 5) {
+        out.textContent = 'Invalid cron: expected 5 fields (minute hour day-of-month month day-of-week).';
+        return;
+      }
+      const names = ['Minute (0-59)', 'Hour (0-23)', 'Day of Month (1-31)', 'Month (1-12)', 'Day of Week (0-6)'];
+      out.innerHTML = parts.map((p, i) => `<div><strong>${names[i]}:</strong> ${p === '*' ? 'Every' : p}</div>`).join('');
+    }
+    explainCron();
+
+    function runDiff() {
+      const a = document.getElementById('diff-a').value.split('\n');
+      const b = document.getElementById('diff-b').value.split('\n');
+      const max = Math.max(a.length, b.length);
+      const out = [];
+      for (let i = 0; i < max; i++) {
+        if (a[i] === b[i]) {
+          out.push(`<span class="diff-eq">  ${(a[i] ?? '').replace(/</g, '&lt;')}</span>`);
+        } else {
+          if (a[i] !== undefined) out.push(`<span class="diff-del">- ${a[i].replace(/</g, '&lt;')}</span>`);
+          if (b[i] !== undefined) out.push(`<span class="diff-add">+ ${b[i].replace(/</g, '&lt;')}</span>`);
+        }
+      }
+      document.getElementById('diff-out').innerHTML = out.join('');
+    }
+
+    function genUuids() {
+      const list = Array.from({ length: 10 }, () => crypto.randomUUID());
+      document.getElementById('uuid-out').value = list.join('\n');
+    }
+    function genSecrets() {
+      const list = Array.from({ length: 5 }, () => {
+        const arr = new Uint8Array(32);
+        crypto.getRandomValues(arr);
+        return Array.from(arr, b => b.toString(16).padStart(2, '0')).join('');
+      });
+      document.getElementById('uuid-out').value = list.join('\n');
+    }
+    genUuids();
+  </script>
+</body>
+</html>
